@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId
+    // Fields:
+    //   - uid: string (required) - Unique user ID
+    //   - displayName: string (optional) - User's display name
+    //   - email: string (required) - User's email address
+    //   - photoURL: string (optional) - User's profile photo URL
+    //   - createdAt: string (optional) - When the profile was created
+    //
+    // Collection: scripts
+    // Document ID: scriptId
+    // Fields:
+    //   - userId: string (required) - ID of the user who generated the script
+    //   - topic: string (required) - The topic or niche of the video
+    //   - hook: string (required) - The attention-grabbing hook
+    //   - script: string (required) - The full Roman Urdu narration script
+    //   - scenes: list (optional) - Visual prompts for AI generators
+    //   - audioCues: string (optional) - Emotional tone and cues for voiceovers
+    //   - monetizationTip: string (optional) - Tips for earning from this video
+    //   - createdAt: string (optional) - When the script was generated
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid is string && data.uid.size() > 0 &&
+             data.email is string && data.email.size() > 0;
+    }
+
+    function isValidScript(data) {
+      return data.keys().hasAll(['userId', 'topic', 'hook', 'script']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.topic is string && data.topic.size() > 0 && data.topic.size() < 500 &&
+             data.hook is string && data.hook.size() > 0 && data.hook.size() < 1000 &&
+             data.script is string && data.script.size() > 0 && data.script.size() < 10000;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+    }
+
+    match /scripts/{scriptId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidScript(request.resource.data);
+      allow update: if isDocOwner() && isValidScript(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+  }
+}

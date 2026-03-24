@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user information and preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique user ID from Firebase Auth." },
+        "displayName": { "type": "string", "description": "User's display name." },
+        "email": { "type": "string", "description": "User's email address." },
+        "photoURL": { "type": "string", "description": "User's profile photo URL." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the profile was created." }
+      },
+      "required": ["uid", "email"]
+    },
+    "ViralScript": {
+      "title": "Viral Script",
+      "description": "A generated script for a viral video.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique script ID." },
+        "userId": { "type": "string", "description": "ID of the user who generated the script." },
+        "topic": { "type": "string", "description": "The topic or niche of the video." },
+        "hook": { "type": "string", "description": "The attention-grabbing hook (first 3 seconds)." },
+        "script": { "type": "string", "description": "The full Roman Urdu narration script." },
+        "scenes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "prompt": { "type": "string", "description": "Visual prompt for AI generators." },
+              "duration": { "type": "string", "description": "Duration of the scene (e.g., 0-10s)." }
+            }
+          }
+        },
+        "audioCues": { "type": "string", "description": "Emotional tone and cues for voiceovers." },
+        "monetizationTip": { "type": "string", "description": "Tips for earning from this video in Pakistan." },
+        "selectedMusic": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "url": { "type": "string" },
+            "genre": { "type": "string" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the script was generated." }
+      },
+      "required": ["userId", "topic", "hook", "script"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents."
+    },
+    "/scripts/{scriptId}": {
+      "schema": "ViralScript",
+      "description": "Generated viral scripts."
+    }
+  }
+}
